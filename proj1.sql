@@ -15,6 +15,7 @@ DROP VIEW IF EXISTS q4ii;
 DROP VIEW IF EXISTS q4iii;
 DROP VIEW IF EXISTS q4iv;
 DROP VIEW IF EXISTS q4v;
+DROP VIEW IF EXISTS lslg_all;
 
 -- Question 0
 CREATE VIEW q0(era)
@@ -84,19 +85,49 @@ AS
 -- Question 3i
 CREATE VIEW q3i(playerid, namefirst, namelast, yearid, slg)
 AS
-  SELECT 1, 1, 1, 1, 1 -- replace this line
+  SELECT P.playerid, P.namefirst, P.namelast, B.yearid, B.slg
+  FROM people AS P
+  INNER JOIN (
+    SELECT *, (h + h2b + 2*h3b + 3*hr) * 1.0 / ab AS slg
+    FROM batting
+    WHERE ab > 50
+    ORDER BY slg DESC LIMIT 10
+  ) AS B ON P.playerid = B.playerid
+;
+
+CREATE VIEW lslg_all(playerid, namefirst, namelast, lslg)
+AS
+  SELECT P.playerid, P.namefirst, P.namelast, B.lslg
+  FROM people AS P
+  INNER JOIN (
+    SELECT playerid, (SUM(h) + SUM(h2b) + 2*SUM(h3b) + 3*SUM(hr)) * 1.0 / SUM(ab) AS lslg
+    FROM batting
+    GROUP BY playerid
+    HAVING SUM(ab) > 50
+    ORDER BY lslg DESC
+  ) AS B ON P.playerid = B.playerid
 ;
 
 -- Question 3ii
 CREATE VIEW q3ii(playerid, namefirst, namelast, lslg)
 AS
-  SELECT 1, 1, 1, 1 -- replace this line
+  SELECT * FROM lslg_all
+  LIMIT 10
 ;
 
 -- Question 3iii
 CREATE VIEW q3iii(namefirst, namelast, lslg)
 AS
-  SELECT 1, 1, 1 -- replace this line
+  SELECT P.namefirst, P.namelast, L.lslg
+  FROM people AS P
+  INNER JOIN lslg_all AS L ON P.playerid = L.playerid
+  WHERE L.lslg > (
+      SELECT (SUM(h) + SUM(h2b) + 2*SUM(h3b) + 3*SUM(hr)) * 1.0 / SUM(ab)
+      FROM batting
+      WHERE playerid = "mayswi01"
+      GROUP BY playerid
+      HAVING SUM(ab) > 50
+  )
 ;
 
 -- Question 4i
