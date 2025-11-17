@@ -160,16 +160,33 @@ AS
 -- Question 4iii
 CREATE VIEW q4iii(yearid, mindiff, maxdiff, avgdiff)
 AS
-  SELECT 1, 1, 1, 1 -- replace this line
+  SELECT L.yearid, L.min - R.min AS mindiff,
+         L.max - R.max AS maxdiff,
+         L.avg - R.avg AS avgdiff
+  FROM q4i AS L
+  INNER JOIN q4i AS R
+  ON L.yearid - R.yearid = 1
+  ORDER BY L.yearid
 ;
 
 -- Question 4iv
 CREATE VIEW q4iv(playerid, namefirst, namelast, salary, yearid)
 AS
-  SELECT 1, 1, 1, 1, 1 -- replace this line
+  WITH filtered_q4i AS (
+    SELECT yearid, max FROM q4i WHERE yearid IN (2000, 2001)
+  )
+  SELECT P.playerid, P.namefirst, P.namelast, S.salary, S.yearid
+  FROM people AS P
+  INNER JOIN salaries AS S ON P.playerid = S.playerid
+  INNER JOIN filtered_q4i AS Q ON S.yearid = Q.yearid
+  WHERE S.salary = Q.max
 ;
 -- Question 4v
 CREATE VIEW q4v(team, diffAvg) AS
-  SELECT 1, 1 -- replace this line
+  SELECT A.teamid, MAX(S.salary) - MIN(S.salary)
+  FROM allstarfull AS A
+  INNER JOIN salaries AS S ON A.playerid = S.playerid AND S.yearid = A.yearid
+  WHERE A.yearid = 2016
+  GROUP BY A.teamid
 ;
 
